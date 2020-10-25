@@ -35,11 +35,10 @@ def parse_arguments():
     return args
 
 
-def gather_domains(pmg, pmg_host):
+def gather_domains(pmg, pmg_host, now):
     dstats = pmg.statistics.domains.get()
 
     influx_json = []
-    now = round(time.time())
 
     for idx, input in enumerate(dstats):
         domain = input.pop('domain')
@@ -56,11 +55,10 @@ def gather_domains(pmg, pmg_host):
     return(influx_json)
 
 
-def gather_mail(pmg, pmg_host):
+def gather_mail(pmg, pmg_host, now):
     dstats = pmg.statistics.mail.get()
 
     influx_json = []
-    now = round(time.time())
 
     point = {
         "measurement": "mail",
@@ -74,7 +72,7 @@ def gather_mail(pmg, pmg_host):
     return(influx_json)
 
 
-def gather_mailcount(pmg, pmg_host):
+def gather_mailcount(pmg, pmg_host, ignore_now):
     dstats = pmg.statistics.mailcount.get()
 
     influx_json = []
@@ -94,7 +92,7 @@ def gather_mailcount(pmg, pmg_host):
     return(influx_json)
 
 
-def gather_recent(pmg, pmg_host):
+def gather_recent(pmg, pmg_host, ignore_now):
     dstats = pmg.statistics.recent.get()
 
     influx_json = []
@@ -116,11 +114,10 @@ def gather_recent(pmg, pmg_host):
     return(influx_json)
 
 
-def gather_spamscores(pmg, pmg_host):
+def gather_spamscores(pmg, pmg_host, nowtime):
     dstats = pmg.statistics.spamscores.get()
 
     influx_json = []
-    nowtime = round(time.time())
 
     for idx, input in enumerate(dstats):
         level = input.pop('level')
@@ -138,11 +135,10 @@ def gather_spamscores(pmg, pmg_host):
     return(influx_json)
 
 
-def gather_virus(pmg, pmg_host):
+def gather_virus(pmg, pmg_host, nowtime):
     dstats = pmg.statistics.virus.get()
 
     influx_json = []
-    nowtime = round(time.time())
 
     for idx, input in enumerate(dstats):
         name = input.pop('name')
@@ -201,15 +197,16 @@ def main(args=None):
     ]
 
     while (True):
+        run_now = round(time.time())
         for gfunc in gather_list:
-            influxdata = gfunc(pmg, args.host)
+            influxdata = gfunc(pmg, args.host, run_now)
             # print(gfunc)
             try:
                 db_client.write_points(influxdata, time_precision='s')
             except Exception as e:
                 print("Cannot contact influx: {0}".format(str(e)))
                 exit(1)
-            time.sleep(args.poll_time)
+        time.sleep(args.poll_time)
 
 
 if __name__ == "__main__":
