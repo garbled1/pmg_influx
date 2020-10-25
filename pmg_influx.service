@@ -1,0 +1,10 @@
+[Unit]
+Description=Proxmox Mail Gateway InfluxDB feeder
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/pmg_influx --host xxx --password xxx -i influx
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
